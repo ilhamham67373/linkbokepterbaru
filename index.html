@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Selamat! Anda Memenangkan Hadiah 🎉</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh; overflow: hidden;
+    cursor: pointer; user-select: none; touch-action: manipulation;
+  }
+
+  /* DECOY */
+  #decoyScreen {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; padding:20px; text-align:center; position:relative; z-index:1;
+  }
+  .decoy-title {
+    font-size:clamp(24px,5vw,48px); font-weight:900; color:#ffd700;
+    text-shadow:0 0 30px rgba(255,215,0,0.5); margin-bottom:16px;
+    animation:float 3s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .decoy-sub{font-size:clamp(14px,3vw,20px);color:#a0c4ff;margin-bottom:40px;}
+  .spin-wheel{font-size:80px;animation:spin 8s linear infinite;display:block;margin-bottom:24px;filter:drop-shadow(0 0 20px rgba(255,215,0,0.6));}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .btn-claim{
+    background:linear-gradient(135deg,#ff6b35,#f7c59f);border:none;color:white;
+    font-family:'Nunito',sans-serif;font-size:clamp(16px,4vw,24px);font-weight:900;
+    padding:18px 48px;border-radius:60px;cursor:pointer;
+    box-shadow:0 8px 32px rgba(255,107,53,0.5);
+    animation:pulse-btn 1.5s ease-in-out infinite;
+    text-transform:uppercase;letter-spacing:2px;
+  }
+  @keyframes pulse-btn{0%,100%{transform:scale(1);box-shadow:0 8px 32px rgba(255,107,53,0.5)}50%{transform:scale(1.05);box-shadow:0 12px 48px rgba(255,107,53,0.8)}}
+  .confetti-bg{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .particle{position:absolute;width:8px;height:8px;border-radius:2px;animation:fall linear infinite;}
+  @keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+  /* PRANK SCREEN */
+  #prankScreen{
+    position:fixed;inset:0;z-index:9000;background:#0d0d0d;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;
+  }
+  #prankScreen.show{display:flex;}
+  .prank-bg-lines{
+    position:absolute;inset:0;overflow:hidden;z-index:0;
+    background:repeating-linear-gradient(45deg,rgba(255,0,0,0.04) 0px,rgba(255,0,0,0.04) 2px,transparent 2px,transparent 20px);
+  }
+  .prank-icon-wrap{position:relative;z-index:1;font-size:80px;margin-bottom:16px;animation:icon-shake 0.4s ease-in-out infinite;}
+  @keyframes icon-shake{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+  .prank-warning-title{
+    position:relative;z-index:1;font-size:clamp(22px,5vw,40px);font-weight:900;
+    color:#ff2222;margin-bottom:8px;text-shadow:0 0 30px rgba(255,0,0,0.8);
+    animation:text-flicker 1.5s ease-in-out infinite;
+  }
+  @keyframes text-flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:0.4}94%{opacity:1}97%{opacity:1}98%{opacity:0.5}99%{opacity:1}}
+  .prank-warning-sub{position:relative;z-index:1;font-size:clamp(12px,2.5vw,16px);color:#ff8888;margin-bottom:28px;line-height:1.7;}
+
+  /* Timer ring */
+  .timer-ring-wrap{position:relative;z-index:1;width:140px;height:140px;margin:0 auto 24px;}
+  .timer-ring-svg{transform:rotate(-90deg);width:140px;height:140px;}
+  .timer-ring-bg{fill:none;stroke:#2a0000;stroke-width:10;}
+  .timer-ring-bar{
+    fill:none;stroke:#ff2222;stroke-width:10;stroke-linecap:round;
+    stroke-dasharray:377;stroke-dashoffset:0;
+    transition:stroke-dashoffset 1s linear;
+    filter:drop-shadow(0 0 6px #ff0000);
+  }
+  .timer-ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .timer-secs{font-size:36px;font-weight:900;color:#ff4444;line-height:1;font-variant-numeric:tabular-nums;}
+  .timer-label{font-size:10px;color:#ff6666;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+
+  .scan-log{
+    position:relative;z-index:1;
+    background:rgba(0,0,0,0.6);border:1px solid #330000;
+    padding:12px 16px;width:100%;max-width:340px;
+    font-family:monospace;font-size:11px;color:#ff4444;
+    text-align:left;line-height:1.8;margin-bottom:20px;
+    max-height:100px;overflow:hidden;
+  }
+  .scan-log-line{animation:fadeInLine 0.3s ease;}
+  @keyframes fadeInLine{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+  /* FLASH */
+  #flashOverlay{position:fixed;inset:0;pointer-events:none;z-index:9998;display:none;}
+  #flashOverlay.active{display:block;animation:flash-screen 0.18s steps(1) infinite;}
+  @keyframes flash-screen{0%,49%{background:rgba(255,0,0,0.65)}50%,100%{background:transparent}}
+
+  /* FAKE BACK DIALOG 1 — Android style bottom sheet */
+  #fakeCloseDialog{
+    position:fixed;inset:0;z-index:99999;
+    background:rgba(0,0,0,0.85);
+    display:none;align-items:flex-end;justify-content:center;
+    padding-bottom:16px;animation:fadeIn 0.2s ease;
+  }
+  #fakeCloseDialog.show{display:flex;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .close-dialog-box{
+    background:#1e1e1e;border-radius:16px;
+    width:100%;max-width:400px;overflow:hidden;
+    box-shadow:0 -8px 40px rgba(0,0,0,0.6);
+  }
+  .close-dialog-title{padding:20px 20px 8px;font-size:16px;font-weight:900;color:#fff;text-align:center;}
+  .close-dialog-msg{padding:0 20px 20px;font-size:13px;color:#999;text-align:center;line-height:1.6;}
+  .close-dialog-msg strong{color:#ff4444;}
+  .close-dialog-btns{display:flex;flex-direction:column;}
+  .close-dialog-btn{
+    padding:16px;font-family:'Nunito',sans-serif;font-size:16px;
+    border:none;cursor:pointer;border-top:1px solid #333;transition:background 0.15s;
+  }
+  .close-dialog-btn.danger{color:#ff3b3b;font-weight:700;background:#1e1e1e;}
+  .close-dialog-btn.danger:active{background:#2a0000;}
+  .close-dialog-btn.cancel{color:#888;background:#1e1e1e;}
+  .close-dialog-btn.cancel:active{background:#252525;}
+
+  /* FAKE BACK DIALOG 2 — iOS alert style */
+  #fakeCloseDialog2{
+    position:fixed;inset:0;z-index:99999;
+    background:rgba(0,0,0,0.85);
+    display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  #fakeCloseDialog2.show{display:flex;}
+  .close-dialog2-box{background:#fff;border-radius:14px;width:100%;max-width:300px;text-align:center;overflow:hidden;}
+  .close-d2-body{padding:24px 20px 0;}
+  .close-d2-icon{font-size:44px;margin-bottom:12px;}
+  .close-d2-title{font-size:17px;font-weight:900;color:#111;margin-bottom:8px;}
+  .close-d2-msg{font-size:13px;color:#555;line-height:1.6;margin-bottom:4px;}
+  .close-d2-warning{font-size:11px;color:#ff4444;margin:8px 0 16px;}
+  .close-d2-btns{display:flex;border-top:1px solid #e5e5e5;}
+  .close-d2-btn{flex:1;padding:14px;font-family:'Nunito',sans-serif;font-size:15px;border:none;cursor:pointer;background:transparent;transition:background 0.15s;}
+  .close-d2-btn.ok{color:#007aff;font-weight:700;}
+  .close-d2-btn.ok:active{background:#f0f8ff;}
+  .close-d2-btn.leave{color:#ff3b30;border-left:1px solid #e5e5e5;}
+  .close-d2-btn.leave:active{background:#fff0f0;}
+
+  /* LAUGH REVEAL */
+  #laughReveal{
+    position:fixed;inset:0;background:#1a1a2e;z-index:99998;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:20px;
+  }
+  #laughReveal.show{display:flex;}
+  .laugh-emoji{font-size:100px;animation:bounceIn 0.6s cubic-bezier(0.68,-0.55,0.265,1.55) both;}
+  @keyframes bounceIn{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+  .laugh-title{font-size:clamp(28px,6vw,60px);font-weight:900;color:#ffd700;margin:16px 0 8px;text-shadow:0 0 40px rgba(255,215,0,0.8);animation:bounceIn 0.6s 0.2s cubic-bezier(0.68,-0.55,0.265,1.55) both;}
+  .laugh-sub{font-size:clamp(14px,3vw,22px);color:#a0c4ff;margin-bottom:16px;animation:bounceIn 0.6s 0.4s cubic-bezier(0.68,-0.55,0.265,1.55) both;}
+  .laugh-credit{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:24px;animation:bounceIn 0.6s 0.6s cubic-bezier(0.68,-0.55,0.265,1.55) both;}
+  .laugh-close{
+    background:transparent;border:2px solid rgba(255,215,0,0.4);
+    color:rgba(255,215,0,0.6);font-family:'Nunito',sans-serif;
+    font-size:14px;padding:10px 32px;border-radius:20px;cursor:pointer;
+    transition:all 0.2s;animation:bounceIn 0.6s 0.7s cubic-bezier(0.68,-0.55,0.265,1.55) both;
+  }
+  .laugh-close:hover{border-color:#ffd700;color:#ffd700;}
+</style>
+</head>
+<body>
+
+<div class="confetti-bg" id="confettiBg"></div>
+
+<!-- DECOY -->
+<div id="decoyScreen">
+  <span class="spin-wheel">🎡</span>
+  <div class="decoy-title">🎉 Selamat! Kamu Menang!</div>
+  <div class="decoy-sub">Kamu adalah pengunjung ke-1.000.000!<br>Klaim hadiahmu sekarang sebelum kedaluwarsa!</div>
+  <button class="btn-claim" onclick="triggerPrank()">🎁 KLAIM HADIAH SEKARANG!</button>
+  <div style="margin-top:24px;font-size:12px;color:rgba(255,255,255,0.3);">
+    ⏰ Waktu tersisa: <span id="countdownTimer">00:59</span>
+  </div>
+</div>
+
+<!-- PRANK SCREEN -->
+<div id="prankScreen">
+  <div class="prank-bg-lines"></div>
+  <div class="prank-icon-wrap">☣️</div>
+  <div class="prank-warning-title">⚠️ VIRUS TERDETEKSI!</div>
+  <div class="prank-warning-sub">
+    Perangkat Anda sedang <strong style="color:#ff4444">diretas!</strong><br>
+    Data kontak, foto &amp; kata sandi sedang dikirim...<br>
+    <span style="color:#ff2222">JANGAN TUTUP HALAMAN INI!</span>
+  </div>
+  <div class="timer-ring-wrap">
+    <svg class="timer-ring-svg" viewBox="0 0 140 140">
+      <circle class="timer-ring-bg" cx="70" cy="70" r="60"/>
+      <circle class="timer-ring-bar" id="timerRingBar" cx="70" cy="70" r="60"/>
+    </svg>
+    <div class="timer-ring-text">
+      <div class="timer-secs" id="prankTimerDisplay">--</div>
+      <div class="timer-label">detik</div>
+    </div>
+  </div>
+  <div class="scan-log" id="scanLog"><div>> Inisialisasi scan...</div></div>
+</div>
+
+<!-- FLASH -->
+<div id="flashOverlay"></div>
+
+<!-- FAKE DIALOG 1 — Android bottom sheet -->
+<div id="fakeCloseDialog">
+  <div class="close-dialog-box">
+    <div class="close-dialog-title">⚠️ Jangan Tinggalkan Halaman</div>
+    <div class="close-dialog-msg">
+      Proses <strong>penghapusan virus</strong> sedang berjalan.<br>
+      Jika kamu keluar sekarang, perangkat kamu akan <strong>rusak permanen!</strong>
+    </div>
+    <div class="close-dialog-btns">
+      <button class="close-dialog-btn danger" onclick="dismissFakeClose1(true)">❌ Keluar Paksa (Berbahaya!)</button>
+      <button class="close-dialog-btn cancel" onclick="dismissFakeClose1(false)">✅ Tetap di Halaman</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAKE DIALOG 2 — iOS alert -->
+<div id="fakeCloseDialog2">
+  <div class="close-dialog2-box">
+    <div class="close-d2-body">
+      <div class="close-d2-icon">🛑</div>
+      <div class="close-d2-title">Konfirmasi Keluar</div>
+      <div class="close-d2-msg">Apakah kamu yakin ingin menutup halaman?</div>
+      <div class="close-d2-warning">⚠️ Virus belum sepenuhnya dihapus! Perangkatmu masih dalam bahaya.</div>
+    </div>
+    <div class="close-d2-btns">
+      <button class="close-d2-btn ok" onclick="dismissFakeClose2(false)">Batalkan</button>
+      <button class="close-d2-btn leave" onclick="dismissFakeClose2(true)">Keluar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAUGH REVEAL -->
+<div id="laughReveal">
+  <div class="laugh-emoji">😂</div>
+  <div class="laugh-title">KENA PRANK LU! 😂</div>
+  <div class="laugh-sub">Santuy... HP kamu aman kok! 😂<br>Gak ada virus, gak ada hacker! 🤣</div>
+  <div class="laugh-credit">diprankin sama temanmu 😈</div>
+  <button class="laugh-close" onclick="closeLaugh()">tutup &amp; selesai</button>
+</div>
+
+<script>
+// ══ SETTINGS ══
+const SETTINGS_KEY = 'prankzone_settings';
+const STORAGE_KEY  = 'prankzone_data';
+
+let cfg = {
+  sound:'jumpscare', volume:1.0, delay:0, flash:true,
+  active:true, soundDuration:30, customAudioB64:null,
+};
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    cfg.sound         = s.sound        || 'jumpscare';
+    cfg.volume        = ((s.volume !== undefined) ? s.volume : 100) / 100;
+    cfg.delay         = s.delay        || 0;
+    cfg.flash         = s.flash        !== false;
+    cfg.active        = s.active       !== false;
+    cfg.soundDuration = s.soundDuration|| 30;
+    cfg.customAudioB64= s.customAudioB64 || null;
+  } catch(e) {}
+}
+
+// ══ VISITOR TRACKING ══
+let visitStart = Date.now(), visitData = {};
+
+async function trackVisit() {
+  const ua = navigator.userAgent;
+  let ip = 'N/A', country = 'Unknown', flag = '🌍';
+  try {
+    const r = await fetch('https://api.ipify.org?format=json',{signal:AbortSignal.timeout(3000)});
+    ip = (await r.json()).ip;
+    try {
+      const r2 = await fetch(`https://ip-api.com/json/${ip}?fields=country,countryCode`,{signal:AbortSignal.timeout(3000)});
+      const d2 = await r2.json();
+      if (d2.country) { country = d2.country; flag = ccToFlag(d2.countryCode); }
+    } catch(e) {}
+  } catch(e) {}
+  visitData = { timestamp:Date.now(), ip, country, flag, ua, duration:null };
+  saveVisitor(visitData);
+}
+
+function saveVisitor(data) {
+  try {
+    let arr = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    arr.push(data);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  } catch(e) {}
+}
+
+function updateDuration() {
+  try {
+    let arr = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    const dur = Math.round((Date.now()-visitStart)/1000);
+    for (let i=arr.length-1;i>=0;i--) {
+      if (arr[i].timestamp===visitData.timestamp){arr[i].duration=dur;break;}
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  } catch(e) {}
+}
+
+function ccToFlag(code) {
+  if (!code||code.length!==2) return '🌍';
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c=>0x1F1E6+c.charCodeAt(0)-65));
+}
+
+// ══ AUDIO ══
+let audioCtx=null, audioSource=null, gainNode=null, isPlaying=false;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function buildBuffer(ctx, type, durSecs) {
+  const len = ctx.sampleRate * durSecs;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d   = buf.getChannelData(0);
+  for (let i=0;i<len;i++) {
+    const t = i/ctx.sampleRate;
+    if (type==='scream') {
+      const f = 600+Math.sin(t*20)*200+Math.sin(t*7)*100;
+      d[i] = Math.sin(2*Math.PI*f*t)*0.5*Math.min(1,t*10);
+    } else if (type==='alarm') {
+      d[i] = Math.sin(2*Math.PI*1000*t)*(Math.floor(t*4)%2===0?0.7:0);
+    } else {
+      d[i] = (
+        Math.sin(2*Math.PI*880*t)*Math.min(1,t*20) +
+        Math.sin(2*Math.PI*1200*t+Math.sin(2*Math.PI*8*t)*5)*0.8 +
+        (Math.random()*2-1)*0.3
+      )*0.4;
+    }
+  }
+  return buf;
+}
+
+async function playSound(durSecs) {
+  if (isPlaying) return;
+  isPlaying = true;
+  try {
+    const ctx = getCtx();
+    if (ctx.state==='suspended') await ctx.resume();
+    gainNode = ctx.createGain();
+    gainNode.gain.value = cfg.volume;
+    gainNode.connect(ctx.destination);
+
+    let buf;
+    if (cfg.sound==='custom' && cfg.customAudioB64) {
+      const ab = await (await fetch(cfg.customAudioB64)).arrayBuffer();
+      buf = await ctx.decodeAudioData(ab);
+    } else {
+      buf = buildBuffer(ctx, cfg.sound, durSecs);
+    }
+    audioSource = ctx.createBufferSource();
+    audioSource.buffer = buf;
+    audioSource.loop = false;
+    audioSource.connect(gainNode);
+    audioSource.start(0);
+  } catch(e) { console.log('audio err',e); }
+}
+
+function stopSound() {
+  try { if (audioSource){audioSource.stop();audioSource=null;} gainNode=null; isPlaying=false; } catch(e) {}
+}
+
+// ══ SCAN LOG ══
+const scanLines = [
+  '> Memindai contacts.db... TERINFEKSI',
+  '> Mengakses galeri foto...',
+  '> Mengunggah passwords.txt → 185.x.x.x',
+  '> Membaca pesan WhatsApp...',
+  '> Melacak lokasi GPS... OK',
+  '> Bypass keamanan sistem... OK',
+  '> Menyalin data perbankan...',
+  '> Upload 2.3 GB → 17% selesai',
+  '> Mengakses kamera & mikrofon...',
+  '> Mengenkripsi file sistem...',
+];
+let scanIdx = 0;
+function addScanLine() {
+  const log = document.getElementById('scanLog');
+  if (!log) return;
+  const line = document.createElement('div');
+  line.className = 'scan-log-line';
+  line.textContent = scanLines[scanIdx % scanLines.length];
+  line.style.color = line.textContent.includes('TERINFEKSI') ? '#ff2222'
+                   : line.textContent.includes('OK') ? '#ff6622' : '#ff4444';
+  log.appendChild(line);
+  if (log.children.length > 5) log.removeChild(log.firstChild);
+  scanIdx++;
+}
+
+// ══ TIMER RING ══
+const CIRC = 2 * Math.PI * 60; // ~377
+
+function updateRing(rem, total) {
+  const bar = document.getElementById('timerRingBar');
+  if (!bar) return;
+  const pct = rem / total;
+  bar.style.strokeDashoffset = CIRC * (1 - pct);
+  bar.style.stroke = pct > 0.5 ? '#ff2222' : pct > 0.2 ? '#ff8800' : '#ffdd00';
+  bar.style.filter = pct <= 0.2 ? 'drop-shadow(0 0 8px #ffcc00)' : 'drop-shadow(0 0 6px #ff0000)';
+}
+
+// ══ FAKE BACK / CLOSE INTERCEPT ══
+let closeAttempts = 0;
+let prankActive   = false;
+
+function armBackButton() {
+  // Push 3 dummy states so user has to press back many times
+  history.pushState({p:1},'');
+  history.pushState({p:2},'');
+  history.pushState({p:3},'');
+}
+
+window.addEventListener('popstate', () => {
+  if (!prankActive) return;
+  history.pushState({p:99},''); // re-arm immediately
+  showFakeClose();
+});
+
+window.addEventListener('beforeunload', (e) => {
+  updateDuration();
+  if (!prankActive) return;
+  e.preventDefault();
+  e.returnValue = 'Proses pembersihan virus belum selesai! Yakin mau keluar?';
+  return e.returnValue;
+});
+
+function showFakeClose() {
+  closeAttempts++;
+  if (closeAttempts % 2 === 1) {
+    document.getElementById('fakeCloseDialog').classList.add('show');
+  } else {
+    document.getElementById('fakeCloseDialog2').classList.add('show');
+  }
+}
+
+function dismissFakeClose1(danger) {
+  document.getElementById('fakeCloseDialog').classList.remove('show');
+  if (danger) setTimeout(()=>document.getElementById('fakeCloseDialog2').classList.add('show'),300);
+}
+
+function dismissFakeClose2(leave) {
+  document.getElementById('fakeCloseDialog2').classList.remove('show');
+  if (leave) setTimeout(showFakeClose, 600); // keep looping!
+}
+
+// ══ MAIN PRANK SEQUENCE ══
+let prankTriggered = false;
+let prankTimerIv = null, scanIv = null;
+
+async function triggerPrank() {
+  if (prankTriggered) return;
+  prankTriggered = true;
+  prankActive = true;
+  updateDuration();
+
+  document.getElementById('decoyScreen').style.display = 'none';
+  document.getElementById('prankScreen').classList.add('show');
+
+  armBackButton();
+
+  const totalSecs = cfg.soundDuration || 30;
+  let remaining = totalSecs;
+
+  document.getElementById('prankTimerDisplay').textContent = remaining;
+  updateRing(remaining, totalSecs);
+
+  // Flash
+  if (cfg.flash) {
+    const fl = document.getElementById('flashOverlay');
+    fl.classList.add('active');
+    setTimeout(()=>fl.classList.remove('active'), 1000);
+  }
+
+  // Sound after delay
+  setTimeout(()=>playSound(totalSecs+2), cfg.delay);
+
+  // Scan log loop
+  addScanLine();
+  scanIv = setInterval(addScanLine, 1800);
+
+  // Countdown timer
+  prankTimerIv = setInterval(()=>{
+    remaining--;
+    const el = document.getElementById('prankTimerDisplay');
+    if (el) el.textContent = remaining;
+    updateRing(remaining, totalSecs);
+
+    if (remaining <= 0) {
+      clearInterval(prankTimerIv);
+      clearInterval(scanIv);
+      stopSound();
+      prankActive = false;
+      endPrank();
+    }
+  }, 1000);
+}
+
+function endPrank() {
+  document.getElementById('prankScreen').classList.remove('show');
+  document.getElementById('fakeCloseDialog').classList.remove('show');
+  document.getElementById('fakeCloseDialog2').classList.remove('show');
+  setTimeout(()=>document.getElementById('laughReveal').classList.add('show'), 300);
+}
+
+function closeLaugh() {
+  document.getElementById('laughReveal').classList.remove('show');
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:rgba(255,255,255,0.2);background:#0a0a0f;font-size:14px;">😂 selesai</div>';
+}
+
+// ══ DECOY COUNTDOWN ══
+function startCountdown() {
+  let secs=59;
+  const el=document.getElementById('countdownTimer');
+  if (!el) return;
+  setInterval(()=>{
+    secs--; if(secs<0)secs=59;
+    el.textContent='00:'+String(secs).padStart(2,'0');
+  },1000);
+}
+
+// ══ CONFETTI ══
+function spawnConfetti() {
+  const colors=['#ffd700','#ff6b35','#a0c4ff','#ff9ff3','#00ff88','#ff4757'];
+  const c=document.getElementById('confettiBg');
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[~~(Math.random()*colors.length)]};width:${4+Math.random()*8}px;height:${4+Math.random()*8}px;animation-duration:${3+Math.random()*4}s;animation-delay:${Math.random()*3}s;border-radius:${Math.random()>.5?'50%':'2px'};transform:rotate(${Math.random()*360}deg);`;
+    c.appendChild(p);
+  }
+}
+
+// ══ INIT ══
+window.addEventListener('load', ()=>{
+  loadSettings();
+  if (!cfg.active) {
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#444;background:#0a0a0f;">Halaman tidak tersedia.</div>';
+    return;
+  }
+  spawnConfetti();
+  startCountdown();
+  trackVisit();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Enter') triggerPrank(); });
+</script>
+</body>
+</html>
